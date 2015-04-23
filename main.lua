@@ -39,6 +39,10 @@ function Board:getToken( x, y )
 end
 
 function Board:moveToken(token, x, y )
+	local toToken = self.map[x][y]
+	if toToken ~= nil then
+		toToken.board = nil
+	end
 	self.map[token.x][token.y] = nil;
 	self.map[x][y] = token
 	token.x = x
@@ -135,11 +139,14 @@ end
 
 function TokenView:updateImg()
 	if self.token.board == nil then
+		if self.img ~= nil then
+			self.img:removeSelf()
+		end
 		return
 	end
 
 	if self.img then
-		self.img:removeSelf();
+		self.img:removeSelf()
 	end
 
 	local myimg = display.newImageRect(self.group,
@@ -278,8 +285,6 @@ mainGroup.y = display.contentHeight/2
 
 mainGroup:insert( boardGroup )
 mainGroup:insert( tokensGroup )
-
-print(tokensGroup.numChildren)
 
 timer.performWithDelay(2000, function()
 	board:moveToken(token, 6, 1)

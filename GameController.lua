@@ -3,7 +3,8 @@ local RuleBook = require "RuleBook"
 
 local GameController = {
 	boardView = nil,
-	selectedToken = nil
+	selectedToken = nil,
+	gameState = nil
 }
 
 function GameController:new(boardView)
@@ -12,6 +13,22 @@ function GameController:new(boardView)
 	self.__index = self
 
 	newObj.boardView = boardView
+
+	local RedPlayer = {
+		owner = "Red"
+	}
+
+	local BluePlayer = {
+		owner = "Blue"
+	}
+
+	RedPlayer.nextPlayer = BluePlayer
+	BluePlayer.nextPlayer = RedPlayer
+
+	newObj.gameState = {
+		currentPlayer = RedPlayer,
+		board = newObj.boardView.board
+	}
 
 	Runtime:addEventListener( "tap", newObj )
 
@@ -29,8 +46,16 @@ function GameController:tap( event )
 	if cellX >= 1 and cellX <= board.width and
 		cellY >= 1 and cellY <= board.height then
 
+		if self.selectedToken ~= nil then
+			if RuleBook.isValidMove(self.gameState, self.selectedToken, cellX, cellY) then
+				RuleBook.performMove(self.gameState, self.selectedToken, cellX, cellY)
+				self:deselect()
+				return true
+			end
+		end
+
 		local token = board:getToken(cellX, cellY)
-		if token then			
+		if token then
 			if token ~= self.selectedToken then
 				self:deselect()
 				self:selectToken(token)

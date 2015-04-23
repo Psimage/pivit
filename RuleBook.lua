@@ -4,7 +4,13 @@ local function addIfValid(board, token, x, y, listOfMoves)
 	local foundToken = board:getToken(x, y)
 	if foundToken ~= nil then
 		if foundToken.owner ~= token.owner then
-			table.insert(listOfMoves, {x=x, y=y})
+			if not token.isMaster then
+				if (x+y+token.x+token.y)%2 ~= 0 then
+					table.insert(listOfMoves, {x=x, y=y})
+				end
+			else
+				table.insert(listOfMoves, {x=x, y=y})
+			end
 		end
 		return true
 	end
@@ -57,6 +63,35 @@ function RuleBook.listValidMoves(board, token)
 		end
 	end
 	return listOfMoves
+end
+
+function RuleBook.isValidMove(gameState, token, toX, toY)
+	local listOfValidMoves = RuleBook.listValidMoves(gameState.board, token)
+
+	for _, pos in ipairs(listOfValidMoves) do
+		if pos.x == toX and pos.y == toY then
+			return true
+		end
+	end
+
+	return false
+end
+
+function RuleBook.performMove(gameState, token, toX, toY)
+	-- TODO: Validate move?
+
+	local board = gameState.board
+
+	board:moveToken(token, toX, toY)
+	token.isHorizontal = not token.isHorizontal
+	if (toX == 1 and toY == 1) or
+		(toX == 1 and toY == board.height) or
+		(toX == board.width and toY == 1) or
+		(toX == board.width and toY == board.height) then
+		token.isMaster = true
+	end
+
+	gameState.currentPlayer = gameState.currentPlayer.nextPlayer
 end
 
 return RuleBook
