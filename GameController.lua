@@ -60,12 +60,7 @@ function GameController:deselect()
 	self.selectedToken.isSelected = false
 	self.selectedToken = nil
 
-	local board = self.boardView.board
-	for x=1, board.width, 1 do
-		for y=1, board.height, 1 do
-			self.boardView:setHighlight(x, y, false)
-		end
-	end
+	self.boardView:hideAllHighlights()
 end
 
 return GameController

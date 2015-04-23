@@ -222,6 +222,14 @@ end
 function BoardView:setHighlight(x, y, value)
 	self.highlightsArray[(y-1)*self.board.width+x].isVisible = value
 end
+
+function BoardView:hideAllHighlights()
+	for x=1, self.board.width, 1 do
+		for y=1, self.board.height, 1 do
+			self:setHighlight(x, y, false)
+		end
+	end
+end
 --------------------------------------------------------------------
 -- Main
 --------------------------------------------------------------------
