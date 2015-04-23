@@ -1,4 +1,5 @@
 local math = require "math"
+local RuleBook = require "RuleBook"
 
 local GameController = {
 	boardView = nil,
@@ -29,11 +30,41 @@ function GameController:tap( event )
 		cellY >= 1 and cellY <= board.height then
 
 		local token = board:getToken(cellX, cellY)
-		if token then
-			token.isSelected = not token.isSelected
+		if token then			
+			if token ~= self.selectedToken then
+				self:deselect()
+				self:selectToken(token)
+			else
+				self:deselect()
+			end
 		end
 
 		return true 
+	end
+end
+
+function GameController:selectToken(token)
+	self.selectedToken = token
+
+	token.isSelected = true
+	
+	local listOfMoves = RuleBook.listValidMoves(self.boardView.board, token)
+	for _, pos in ipairs(listOfMoves) do
+		self.boardView:setHighlight(pos.x, pos.y, true)
+	end
+end
+
+function GameController:deselect()
+	if self.selectedToken == nil then return end
+
+	self.selectedToken.isSelected = false
+	self.selectedToken = nil
+
+	local board = self.boardView.board
+	for x=1, board.width, 1 do
+		for y=1, board.height, 1 do
+			self.boardView:setHighlight(x, y, false)
+		end
 	end
 end
 

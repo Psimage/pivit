@@ -281,8 +281,3 @@ timer.performWithDelay(3000, function()
 	token.isMaster = false
 	token.isHorizontal = true
 end)
-
-boardView:setHighlight(2, 6, true)
-boardView:setHighlight(2, 5, true)
-boardView:setHighlight(1, 1, true)
-boardView:setHighlight(6, 6, true)
