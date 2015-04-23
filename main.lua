@@ -120,8 +120,6 @@ function TokenView:new(tokenObj, group)
 	newObj.imgSelected.strokeWidth = 3
 	newObj:updateImg()
 
-	-- Runtime:addEventListener( "tap", newObj )
-
 	tokenObj:registerObserver(newObj)
 
 	return newObj
@@ -163,27 +161,12 @@ function TokenView:updateImg()
 	self.imgSelected.isVisible = self.token.isSelected
 end
 
--- function TokenView:tap( event )
--- 	if self.img == nil then
--- 		return false
--- 	end
-
--- 	local localX, localY = self.img:contentToLocal(event.x, event.y)
--- 	localX = localX + self.img.width / 2
--- 	localY = localY + self.img.height / 2
-
--- 	if localX >= 0 and localX <= self.img.width and
--- 		localY >= 0 and localY <= self.img.height then
-
--- 		self.token.isSelected = not self.token.isSelected
--- 		return true 
--- 	end
--- end
 --------------------------------------------------------------------
 --- Token View
 --------------------------------------------------------------------
 local BoardView = {
 	board = nil,
+	highlightsArray = {},
 	group = nil
 }
 
@@ -193,7 +176,7 @@ function BoardView:new(board, group)
 	self.__index = self
 
 	o.board = board
-	o.group = group
+	o.group = display.newGroup()
 
 	o:init()
 
@@ -203,10 +186,19 @@ end
 function BoardView:init()
 	local board = self.board
 
-	for x = 0, board.width-1 do
-		for y = 0, board.height-1 do
-			local rect = display.newRect(self.group,
-				cellWidth/2+x*cellWidth, cellHeight/2+y*cellHeight, 
+	local boardLayer = display.newGroup()
+	self.group:insert(boardLayer)
+
+	local highlightLayer = display.newGroup()
+	self.group:insert(highlightLayer)
+
+	for y = 0, board.width-1 do
+		for x = 0, board.height-1 do
+			local posX = cellWidth/2+x*cellWidth
+			local posY = cellHeight/2+y*cellHeight
+
+			local rect = display.newRect(boardLayer,
+				posX, posY, 
 				cellWidth, cellHeight)
 
 			if (x+y) % 2 == 0 then
@@ -214,29 +206,24 @@ function BoardView:init()
 			else
 				rect.fill = {1, 1, 1}
 			end
+
+			local highlight = display.newRoundedRect(highlightLayer, 
+				posX, posY, 
+				cellWidth-3, cellHeight-3, 3)
+			highlight.fill = {0.1, 0.9, 0.9, 0.3}
+			highlight.stroke = {255/255, 25/255, 0/255, 0.3}
+			highlight.strokeWidth = 3
+			highlight.isVisible = false
+			table.insert(self.highlightsArray, highlight)
 		end
 	end
 end
+
+function BoardView:setHighlight(x, y, value)
+	self.highlightsArray[(y-1)*self.board.width+x].isVisible = value
+end
 --------------------------------------------------------------------
--- local function drawBoard(board)
--- 	local boardGroup = display.newGroup( )
-
--- 	for x = 0, board.width-1 do
--- 		for y = 0, board.height-1 do
--- 			local rect = display.newRect(boardGroup,
--- 				cellWidth/2+x*cellWidth, cellHeight/2+y*cellHeight, 
--- 				cellWidth, cellHeight)
-
--- 			if (x+y) % 2 == 0 then
--- 				rect.fill = {0.5}
--- 			else
--- 				rect.fill = {1, 1, 1}
--- 			end
--- 		end
--- 	end
-
--- 	return boardGroup
--- end
+-- Main
 --------------------------------------------------------------------
 
 local GameController = require "GameController"
@@ -269,8 +256,8 @@ token = Token:new {
 board:addToken(6, 6, token)
 TokenView:new(token, tokensGroup)
 
-local boardGroup = display.newGroup( )
-local boardView = BoardView:new(board, boardGroup)
+local boardView = BoardView:new(board)
+local boardGroup = boardView.group
 
 GameController:new(boardView)
 
@@ -294,3 +281,8 @@ timer.performWithDelay(3000, function()
 	token.isMaster = false
 	token.isHorizontal = true
 end)
+
+boardView:setHighlight(2, 6, true)
+boardView:setHighlight(2, 5, true)
+boardView:setHighlight(1, 1, true)
+boardView:setHighlight(6, 6, true)
