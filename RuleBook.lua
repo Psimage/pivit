@@ -119,7 +119,7 @@ function RuleBook.performMove(gameState, token, toX, toY)
 		print("Game Over")
 		-- Determine the winner
 		if onePlayerOnBoard then
-			print("The winner is: " + token.onwer)
+			print("The winner is (the only one left): " .. token.owner)
 		else
 			local mastersCountByOwner = {}
 			for _, t in ipairs(tokensList) do
