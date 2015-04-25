@@ -91,7 +91,55 @@ function RuleBook.performMove(gameState, token, toX, toY)
 		token.isMaster = true
 	end
 
-	gameState.currentPlayer = gameState.currentPlayer.nextPlayer
+	-- Check winning conditions
+	local tokensList = board:getAllTokens()
+	local minionsOnBoard = false
+	for _, t in ipairs(tokensList) do
+		if not t.isMaster then
+			minionsOnBoard = true
+			break
+		end
+	end
+
+	local onePlayerOnBoard = true
+	for _, t in ipairs(tokensList) do
+		if t.owner ~= token.owner then
+			onePlayerOnBoard = false
+			break
+		end
+	end
+
+	local gameOver = minionsOnBoard == false or onePlayerOnBoard
+
+	if gameOver then
+		print("Game Over")
+		-- Determine the winner
+		if onePlayerOnBoard then
+			print("The winner is: " + token.onwer)
+		else
+			local mastersCountByOwner = {}
+			for _, t in ipairs(tokensList) do
+				mastersCountByOwner[t.owner] = (mastersCountByOwner[t.owner] == nil) and 1 or (mastersCountByOwner[t.owner]+1)
+			end
+
+			local sortedMastersCount = {}
+			for owner, count in pairs(mastersCountByOwner) do
+				table.insert(sortedMastersCount, {["owner"] = owner, ["count"] = count})
+			end
+			table.sort( sortedMastersCount, function (a, b) return a.count > b.count end )
+
+			-- TODO: resolve for more then 2
+			if sortedMastersCount[1].count == sortedMastersCount[2].count then
+				-- TODO: resolve tiebreaker
+				print("Tiebreaker!")
+			else
+				winner = sortedMastersCount[1].owner
+				print("The winner is (by num of masters " .. sortedMastersCount[1].count .. "): " .. winner)
+			end
+		end
+	else
+		gameState.currentPlayer = gameState.currentPlayer.nextPlayer
+	end
 end
 
 return RuleBook

@@ -49,6 +49,21 @@ function Board:moveToken(token, x, y )
 	token.y = y
 end
 
+function Board:getAllTokens()
+	local tokensList = {}
+
+	for x=1, self.width, 1 do
+		for y=1, self.height, 1 do
+			local token = self:getToken(x, y)
+			if token ~= nil then
+				table.insert( tokensList, token )
+			end
+		end
+	end
+
+	return tokensList
+end
+
 --------------------------------------------------------------------
 --- Token
 --------------------------------------------------------------------
@@ -248,10 +263,12 @@ local board = Board:new()
 -- Tokens
 local tokensGroup = display.newGroup( )
 local token = Token:new()
+token.isMaster = true
 board:addToken(1, 1, token)
 TokenView:new(token, tokensGroup)
 
 token = Token:new()
+token.isMaster = true
 token.owner = "red"
 board:addToken(2, 1, token)
 TokenView:new(token, tokensGroup)
@@ -265,10 +282,10 @@ TokenView:new(token, tokensGroup)
 
 token = Token:new {
 	owner = "red",
-	isMaster = true,
+	isMaster = false,
 	isHorizontal = false
 }
-board:addToken(6, 6, token)
+board:addToken(6, 1, token)
 TokenView:new(token, tokensGroup)
 
 local boardView = BoardView:new(board)
@@ -286,11 +303,11 @@ mainGroup.y = display.contentHeight/2
 mainGroup:insert( boardGroup )
 mainGroup:insert( tokensGroup )
 
-timer.performWithDelay(2000, function()
-	board:moveToken(token, 6, 1)
-end)
+-- timer.performWithDelay(2000, function()
+-- 	board:moveToken(token, 6, 1)
+-- end)
 
-timer.performWithDelay(3000, function()
-	token.isMaster = false
-	token.isHorizontal = true
-end)
+-- timer.performWithDelay(3000, function()
+-- 	token.isMaster = false
+-- 	token.isHorizontal = true
+-- end)

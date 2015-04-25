@@ -15,11 +15,11 @@ function GameController:new(boardView)
 	newObj.boardView = boardView
 
 	local RedPlayer = {
-		owner = "Red"
+		owner = "red"
 	}
 
 	local BluePlayer = {
-		owner = "Blue"
+		owner = "blue"
 	}
 
 	RedPlayer.nextPlayer = BluePlayer
@@ -55,7 +55,7 @@ function GameController:tap( event )
 		end
 
 		local token = board:getToken(cellX, cellY)
-		if token then
+		if token and token.owner == self.gameState.currentPlayer.owner then
 			if token ~= self.selectedToken then
 				self:deselect()
 				self:selectToken(token)
