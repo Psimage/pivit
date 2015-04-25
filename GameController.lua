@@ -15,19 +15,23 @@ function GameController:new(boardView)
 	newObj.boardView = boardView
 
 	local RedPlayer = {
-		owner = "red"
+		owner = "red",
+		firstMasterPromotionPlace = 322
 	}
 
 	local BluePlayer = {
-		owner = "blue"
+		owner = "blue",
+		firstMasterPromotionPlace = 322
 	}
 
 	RedPlayer.nextPlayer = BluePlayer
 	BluePlayer.nextPlayer = RedPlayer
 
 	newObj.gameState = {
+		playersList = {["red"] = RedPlayer, ["blue"] = BluePlayer},
 		currentPlayer = RedPlayer,
-		board = newObj.boardView.board
+		board = newObj.boardView.board,
+		promotionPlace = 1 -- To resolve tiebreaker
 	}
 
 	Runtime:addEventListener( "tap", newObj )

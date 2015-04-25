@@ -89,6 +89,10 @@ function RuleBook.performMove(gameState, token, toX, toY)
 		(toX == board.width and toY == 1) or
 		(toX == board.width and toY == board.height) then
 		token.isMaster = true
+		if gameState.currentPlayer.firstMasterPromotionPlace == 322 then
+			gameState.currentPlayer.firstMasterPromotionPlace = gameState.promotionPlace
+			gameState.promotionPlace = gameState.promotionPlace + 1
+		end
 	end
 
 	-- Check winning conditions
@@ -128,12 +132,26 @@ function RuleBook.performMove(gameState, token, toX, toY)
 			end
 			table.sort( sortedMastersCount, function (a, b) return a.count > b.count end )
 
-			-- TODO: resolve for more then 2
+
 			if sortedMastersCount[1].count == sortedMastersCount[2].count then
-				-- TODO: resolve tiebreaker
 				print("Tiebreaker!")
+				
+				local maxCount = sortedMastersCount[1].count
+				local winner = sortedMastersCount[1].owner
+				for i=2, #sortedMastersCount, 1 do
+					if sortedMastersCount[i].count == maxCount then
+						local player = gameState.playersList[sortedMastersCount[i].owner]
+						if player.firstMasterPromotionPlace < gameState.playersList[winner].firstMasterPromotionPlace then
+							winner = player.owner
+						end
+					else
+						break
+					end
+				end
+
+				print("The winner is (via promotion place): " .. winner)
 			else
-				winner = sortedMastersCount[1].owner
+				local winner = sortedMastersCount[1].owner
 				print("The winner is (by num of masters " .. sortedMastersCount[1].count .. "): " .. winner)
 			end
 		end
