@@ -95,8 +95,33 @@ function RuleBook.performMove(gameState, token, toX, toY)
 		end
 	end
 
+	local gameOver = RuleBook.isGameOver(gameState)
+
+	if gameOver then
+		print("Game Over")
+		RuleBook.getWinner(gameState)
+	else
+		gameState.currentPlayer = gameState.currentPlayer.nextPlayer
+	end
+end
+
+local function isOnePlayerLeft(gameState)
+	local onePlayerLeft = true
+
+	local tokensList = gameState.board:getAllTokens()
+	for _, t in ipairs(tokensList) do
+		if t.owner ~= gameState.currentPlayer.owner then
+			onePlayerLeft = false
+			break
+		end
+	end
+
+	return onePlayerLeft
+end
+
+function RuleBook.isGameOver(gameState)
 	-- Check winning conditions
-	local tokensList = board:getAllTokens()
+	local tokensList = gameState.board:getAllTokens()
 	local minionsOnBoard = false
 	for _, t in ipairs(tokensList) do
 		if not t.isMaster then
@@ -105,59 +130,56 @@ function RuleBook.performMove(gameState, token, toX, toY)
 		end
 	end
 
-	local onePlayerOnBoard = true
-	for _, t in ipairs(tokensList) do
-		if t.owner ~= token.owner then
-			onePlayerOnBoard = false
-			break
-		end
-	end
+	local onePlayerOnBoard = isOnePlayerLeft(gameState)
 
-	local gameOver = minionsOnBoard == false or onePlayerOnBoard
+	local isGameOver = minionsOnBoard == false or onePlayerOnBoard
+	return isGameOver
+end
 
-	if gameOver then
-		print("Game Over")
-		-- Determine the winner
-		if onePlayerOnBoard then
-			print("The winner is (the only one left): " .. token.owner)
-		else
-			local mastersCountByOwner = {}
-			for _, t in ipairs(tokensList) do
-				mastersCountByOwner[t.owner] = (mastersCountByOwner[t.owner] == nil) and 1 or (mastersCountByOwner[t.owner]+1)
-			end
+function RuleBook.getWinner(gameState)
+	local winner = nil
 
-			local sortedMastersCount = {}
-			for owner, count in pairs(mastersCountByOwner) do
-				table.insert(sortedMastersCount, {["owner"] = owner, ["count"] = count})
-			end
-			table.sort( sortedMastersCount, function (a, b) return a.count > b.count end )
-
-
-			if sortedMastersCount[1].count == sortedMastersCount[2].count then
-				print("Tiebreaker!")
-				
-				local maxCount = sortedMastersCount[1].count
-				local winner = sortedMastersCount[1].owner
-				for i=2, #sortedMastersCount, 1 do
-					if sortedMastersCount[i].count == maxCount then
-						local player = gameState.playersList[sortedMastersCount[i].owner]
-						if player.firstMasterPromotionPlace < gameState.playersList[winner].firstMasterPromotionPlace then
-							winner = player.owner
-						end
-					else
-						break
-					end
-				end
-
-				print("The winner is (via promotion place): " .. winner)
-			else
-				local winner = sortedMastersCount[1].owner
-				print("The winner is (by num of masters " .. sortedMastersCount[1].count .. "): " .. winner)
-			end
-		end
+	-- Determine the winner
+	if isOnePlayerLeft(gameState) then
+		print("The winner is (the only one left): " .. gameState.currentPlayer.owner)
+		winner = gameState.currentPlayer.owner
 	else
-		gameState.currentPlayer = gameState.currentPlayer.nextPlayer
+		local mastersCountByOwner = {}
+		for _, t in ipairs(gameState.board:getAllTokens()) do
+			mastersCountByOwner[t.owner] = (mastersCountByOwner[t.owner] == nil) and 1 or (mastersCountByOwner[t.owner]+1)
+		end
+
+		local sortedMastersCount = {}
+		for owner, count in pairs(mastersCountByOwner) do
+			table.insert(sortedMastersCount, {["owner"] = owner, ["count"] = count})
+		end
+		table.sort( sortedMastersCount, function (a, b) return a.count > b.count end )
+
+
+		if sortedMastersCount[1].count == sortedMastersCount[2].count then
+			print("Tiebreaker!")
+			
+			local maxCount = sortedMastersCount[1].count
+			winner = sortedMastersCount[1].owner
+			for i=2, #sortedMastersCount, 1 do
+				if sortedMastersCount[i].count == maxCount then
+					local player = gameState.playersList[sortedMastersCount[i].owner]
+					if player.firstMasterPromotionPlace < gameState.playersList[winner].firstMasterPromotionPlace then
+						winner = player.owner
+					end
+				else
+					break
+				end
+			end
+
+			print("The winner is (via promotion place): " .. winner)
+		else
+			winner = sortedMastersCount[1].owner
+			print("The winner is (by num of masters " .. sortedMastersCount[1].count .. "): " .. winner)
+		end
 	end
+
+	return winner
 end
 
 return RuleBook
