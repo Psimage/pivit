@@ -94,15 +94,6 @@ function RuleBook.performMove(gameState, token, toX, toY)
 			gameState.promotionPlace = gameState.promotionPlace + 1
 		end
 	end
-
-	local gameOver = RuleBook.isGameOver(gameState)
-
-	if gameOver then
-		print("Game Over")
-		RuleBook.getWinner(gameState)
-	else
-		gameState.currentPlayer = gameState.currentPlayer.nextPlayer
-	end
 end
 
 local function isOnePlayerLeft(gameState)

@@ -1,10 +1,12 @@
 local math = require "math"
 local RuleBook = require "RuleBook"
+local TurnPanel = require "TurnPanel"
 
 local GameController = {
 	boardView = nil,
 	selectedToken = nil,
-	gameState = nil
+	gameState = nil,
+	turnPanel = nil
 }
 
 function GameController:new(boardView)
@@ -16,12 +18,14 @@ function GameController:new(boardView)
 
 	local RedPlayer = {
 		owner = "red",
-		firstMasterPromotionPlace = 322
+		firstMasterPromotionPlace = 322,
+		color = {1, 0, 0, 1}
 	}
 
 	local BluePlayer = {
 		owner = "blue",
-		firstMasterPromotionPlace = 322
+		firstMasterPromotionPlace = 322,
+		color = {0, 0, 1, 1}
 	}
 
 	RedPlayer.nextPlayer = BluePlayer
@@ -31,8 +35,12 @@ function GameController:new(boardView)
 		playersList = {["red"] = RedPlayer, ["blue"] = BluePlayer},
 		currentPlayer = RedPlayer,
 		board = newObj.boardView.board,
-		promotionPlace = 1 -- To resolve tiebreaker
+		promotionPlace = 1, -- To resolve tiebreaker
+		state = "playing"
 	}
+
+	newObj.turnPanel = TurnPanel:new(newObj.gameState)
+	newObj.turnPanel:select(newObj.gameState.currentPlayer)
 
 	Runtime:addEventListener( "tap", newObj )
 
@@ -47,29 +55,48 @@ function GameController:tap( event )
 
 	local board = self.boardView.board
 
-	if cellX >= 1 and cellX <= board.width and
-		cellY >= 1 and cellY <= board.height then
+	if self.gameState.state == "playing" then
+		if cellX >= 1 and cellX <= board.width and
+			cellY >= 1 and cellY <= board.height then
 
-		if self.selectedToken ~= nil then
-			if RuleBook.isValidMove(self.gameState, self.selectedToken, cellX, cellY) then
-				RuleBook.performMove(self.gameState, self.selectedToken, cellX, cellY)
-				self:deselect()
-				return true
+			if self.selectedToken ~= nil then
+				if RuleBook.isValidMove(self.gameState, self.selectedToken, cellX, cellY) then
+					RuleBook.performMove(self.gameState, self.selectedToken, cellX, cellY)
+					
+					self:deselect()
+
+					if RuleBook.isGameOver(self.gameState) then
+						print("Game Over")
+						self.gameState.state = "gameover"
+						RuleBook.getWinner(self.gameState)
+					else
+						self:nextPlayer()
+					end
+
+					return true
+				end
 			end
-		end
 
-		local token = board:getToken(cellX, cellY)
-		if token and token.owner == self.gameState.currentPlayer.owner then
-			if token ~= self.selectedToken then
-				self:deselect()
-				self:selectToken(token)
-			else
-				self:deselect()
+			local token = board:getToken(cellX, cellY)
+			if token and token.owner == self.gameState.currentPlayer.owner then
+				if token ~= self.selectedToken then
+					self:deselect()
+					self:selectToken(token)
+				else
+					self:deselect()
+				end
 			end
-		end
 
-		return true 
+			return true 
+		end
+	elseif self.gameState.state == "gameover" then
+		-- Do nothing
 	end
+end
+
+function GameController:nextPlayer()
+	self.gameState.currentPlayer = self.gameState.currentPlayer.nextPlayer
+	self.turnPanel:select(self.gameState.currentPlayer)
 end
 
 function GameController:selectToken(token)
