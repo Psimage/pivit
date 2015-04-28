@@ -1,13 +1,17 @@
 local math = require "math"
 local RuleBook = require "RuleBook"
 local TurnPanel = require "TurnPanel"
+local WinnerPanel = require "WinnerPanel"
 
 local GameController = {
 	boardView = nil,
 	selectedToken = nil,
 	gameState = nil,
-	turnPanel = nil
+	turnPanel = nil,
+	winnerPanel = nil
 }
+
+local GameState = { GAME_IN_PROGRESS = "game_in_progress", GAME_OVER = "game_over"}
 
 function GameController:new(boardView)
 	local newObj = {}
@@ -36,11 +40,13 @@ function GameController:new(boardView)
 		currentPlayer = RedPlayer,
 		board = newObj.boardView.board,
 		promotionPlace = 1, -- To resolve tiebreaker
-		state = "playing"
+		state = GameState.GAME_IN_PROGRESS
 	}
 
 	newObj.turnPanel = TurnPanel:new(newObj.gameState)
 	newObj.turnPanel:select(newObj.gameState.currentPlayer)
+
+	newObj.winnerPanel = WinnerPanel:new()
 
 	Runtime:addEventListener( "tap", newObj )
 
@@ -55,7 +61,7 @@ function GameController:tap( event )
 
 	local board = self.boardView.board
 
-	if self.gameState.state == "playing" then
+	if self.gameState.state == GameState.GAME_IN_PROGRESS then
 		if cellX >= 1 and cellX <= board.width and
 			cellY >= 1 and cellY <= board.height then
 
@@ -67,8 +73,9 @@ function GameController:tap( event )
 
 					if RuleBook.isGameOver(self.gameState) then
 						print("Game Over")
-						self.gameState.state = "gameover"
-						RuleBook.getWinner(self.gameState)
+						self.gameState.state = GameState.GAME_OVER
+						local winner = RuleBook.getWinner(self.gameState)
+						self.winnerPanel:show(self.gameState.playersList[winner])
 					else
 						self:nextPlayer()
 					end
@@ -89,7 +96,7 @@ function GameController:tap( event )
 
 			return true 
 		end
-	elseif self.gameState.state == "gameover" then
+	elseif self.gameState.state == GameState.GAME_OVER then
 		-- Do nothing
 	end
 end

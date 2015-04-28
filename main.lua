@@ -8,7 +8,7 @@ local Token = require "Token"
 local TokenView = require "TokenView"
 
 ENV = {
-	dev = true
+	dev = false
 }
 
 boardSize = 6
